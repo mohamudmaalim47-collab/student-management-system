@@ -1,0 +1,133 @@
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            {{ isEditMode ? '✏️ Edit Exam Record' : '📝 Add New Exam Record' }}
+          </h4>
+        </div>
+
+        <div class="card-body">
+          <!-- Loading State -->
+          <div *ngIf="loadingStudents" class="text-center py-4">
+  <div class="spinner-border text-info" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <p class="mt-2">Loading students list...</p>
+</div>
+
+          <!-- Success Message -->
+          <div *ngIf="successMessage" class="alert alert-success">
+            {{ successMessage }}
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="error" class="alert alert-danger">
+            {{ error }}
+          </div>
+
+          <!-- Form -->
+          <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+            <!-- Student Select -->
+            <div class="mb-3">
+              <label for="student" class="form-label">Student *</label>
+              <select class="form-control" id="student" formControlName="student"
+                [class.is-invalid]="studentControl?.invalid && studentControl?.touched">
+                <option value="">Select a student</option>
+                <option *ngFor="let student of students" [value]="student.id">
+                  {{ student.student_id }} - {{ student.first_name }} {{ student.last_name }} ({{ student.class_name }})
+                </option>
+              </select>
+              <div *ngIf="studentControl?.invalid && studentControl?.touched" class="invalid-feedback">
+                Please select a student
+              </div>
+            </div>
+
+            <!-- Subject -->
+            <div class="mb-3">
+              <label for="subject" class="form-label">Subject *</label>
+              <input type="text" class="form-control" id="subject" formControlName="subject"
+                placeholder="e.g., Mathematics, English, Science"
+                [class.is-invalid]="subjectControl?.invalid && subjectControl?.touched">
+              <div *ngIf="subjectControl?.invalid && subjectControl?.touched" class="invalid-feedback">
+                Subject is required
+              </div>
+            </div>
+
+            <!-- Term & Date -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="term" class="form-label">Term *</label>
+                <select class="form-control" id="term" formControlName="term"
+                  [class.is-invalid]="termControl?.invalid && termControl?.touched">
+                  <option value="">Select term</option>
+                  <option *ngFor="let term of terms" [value]="term">
+                    {{ getTermDisplay(term) }}
+                  </option>
+                </select>
+                <div *ngIf="termControl?.invalid && termControl?.touched" class="invalid-feedback">
+                  Please select a term
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="exam_date" class="form-label">Exam Date *</label>
+                <input type="date" class="form-control" id="exam_date" formControlName="exam_date"
+                  [class.is-invalid]="examDateControl?.invalid && examDateControl?.touched">
+                <div *ngIf="examDateControl?.invalid && examDateControl?.touched" class="invalid-feedback">
+                  Exam date is required
+                </div>
+              </div>
+            </div>
+
+            <!-- Marks -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="marks" class="form-label">Marks Obtained *</label>
+                <input type="number" class="form-control" id="marks" formControlName="marks" min="0" step="0.01"
+                  [class.is-invalid]="marksControl?.invalid && marksControl?.touched">
+                <div *ngIf="marksControl?.invalid && marksControl?.touched" class="invalid-feedback">
+                  <div *ngIf="marksControl?.errors?.['required']">Marks are required</div>
+                  <div *ngIf="marksControl?.errors?.['min']">Marks cannot be negative</div>
+                </div>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="max_marks" class="form-label">Maximum Marks *</label>
+                <input type="number" class="form-control" id="max_marks" formControlName="max_marks" min="1" step="0.01"
+                  [class.is-invalid]="maxMarksControl?.invalid && maxMarksControl?.touched">
+                <div *ngIf="maxMarksControl?.invalid && maxMarksControl?.touched" class="invalid-feedback">
+                  <div *ngIf="maxMarksControl?.errors?.['required']">Maximum marks are required</div>
+                  <div *ngIf="maxMarksControl?.errors?.['min']">Maximum marks must be at least 1</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Percentage Preview -->
+            <div *ngIf="calculatePreview()" class="alert alert-info">
+              <strong>Preview:</strong> {{ calculatePreview() }}
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-between mt-4">
+              <button type="button" class="btn btn-outline-secondary" (click)="cancel()">
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid || loading">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+                {{ loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Exam' : 'Create Exam')
+                }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Help Text -->
+      <div class="mt-3 text-muted small">
+        <p>* Required fields</p>
+        <p>Note: Each student can have only one exam record per subject per term</p>
+      </div>
+    </div>
+  </div>
+</div>

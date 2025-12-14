@@ -1,0 +1,13 @@
+/* Add custom styles */
+.progress {
+  background-color: #f0f0f0;
+  border-radius: 10px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.badge {
+  font-size: 0.85em;
+}

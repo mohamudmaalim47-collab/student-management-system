@@ -1,0 +1,227 @@
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header bg-success text-white">
+      <h4 class="mb-0">📊 Student Results & Performance Analytics</h4>
+    </div>
+
+    <div class="card-body">
+      <!-- Loading State -->
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="spinner-border text-success" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Analyzing student performance data...</p>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="error" class="alert alert-danger">
+        {{ error }}
+      </div>
+
+      <!-- Results Summary -->
+      <div *ngIf="!loading && !error" class="mt-3">
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card text-white bg-primary">
+              <div class="card-body text-center">
+                <h5 class="card-title">Total Students</h5>
+                <h2 class="card-text">{{ students.length }}</h2>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-info">
+              <div class="card-body text-center">
+                <h5 class="card-title">Total Exams</h5>
+                <h2 class="card-text">{{ exams.length }}</h2>
+              </div>
+            </div>
+          </div>
+                          <div class="col-md-3">
+            <div class="card text-white bg-success">
+              <div class="card-body text-center">
+                <h5 class="card-title">Avg. Performance</h5>
+                <h2 class="card-text">{{ calculateOverallAverage() }}%</h2>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card text-white bg-warning">
+              <div class="card-body text-center">
+                <h5 class="card-title">Top Performer</h5>
+                <h6 class="card-text">
+                  {{ studentPerformances[0]?.student?.first_name || 'N/A' }}
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Performance Table -->
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>Rank</th>
+                <th>Student</th>
+                <th>Exams Taken</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let performance of studentPerformances; let i = index">
+                <td>
+                  <span *ngIf="i < 3" class="badge bg-warning">#{{ i + 1 }}</span>
+                  <span *ngIf="i >= 3" class="badge bg-secondary">#{{ i + 1 }}</span>
+                </td>
+                <td>
+                  <strong>{{ performance.student.first_name }} {{ performance.student.last_name }}</strong><br>
+                  <small class="text-muted">{{ performance.student.student_id }} | {{ performance.student.class_name }}</small>
+                </td>
+                <td>
+                  <span class="badge bg-primary">{{ performance.totalExams }}</span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary" 
+                          (click)="viewStudentAnalytics(performance.student.id)">
+                    📊 View Analytics
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Individual Student Analytics -->
+        <div *ngIf="showAnalytics && selectedStudent" class="card mt-4 border-primary">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📊 {{ selectedStudent.student.first_name }} {{ selectedStudent.student.last_name }} - Analytics</h5>
+            <button class="btn btn-sm btn-outline-light" (click)="closeAnalytics()">
+              ✕ Close
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h6>Student ID</h6>
+                    <h5>{{ selectedStudent.student.student_id }}</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-success text-white">
+                  <div class="card-body text-center">
+                    <h6>Total Exams</h6>
+                    <h5>{{ selectedStudentExams.length }}</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                  <div class="card-body text-center">
+                    <h6>Average Score</h6>
+                    <h5>{{ getAverageScore(selectedStudentExams) }}</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card bg-secondary text-white">
+                  <div class="card-body text-center">
+                    <h6>Mean Grade</h6>
+                    <h5>{{ getMeanGrade(selectedStudentExams) }}</h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Additional Analytics Row -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="card bg-info text-white">
+                  <div class="card-body text-center">
+                    <h6>Class Rank</h6>
+                    <h5>#{{ getStudentRank(selectedStudent.student.id) }}</h5>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card bg-primary text-white">
+                  <div class="card-body text-center">
+                    <h6>Number of Subjects</h6>
+                    <h5>{{ getNumberOfSubjects(selectedStudentExams) }}</h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <h6>Exam Records</h6>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Date</th>
+                    <th>Subject</th>
+                    <th>Term</th>
+                    <th>Marks</th>
+                    <th>Max Marks</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let exam of selectedStudentExams">
+                    <td>{{ exam.exam_date | date:'short' }}</td>
+                    <td>{{ exam.subject }}</td>
+                    <td>{{ exam.term }}</td>
+                    <td>{{ exam.marks }}</td>
+                    <td>{{ exam.max_marks }}</td>
+                    <td>
+                      <div class="progress" style="height: 20px;">
+                        <div class="progress-bar" 
+                             [ngClass]="{
+                               'bg-success': (exam.marks/exam.max_marks)*100 >= 70,
+                               'bg-warning': (exam.marks/exam.max_marks)*100 >= 50 && (exam.marks/exam.max_marks)*100 < 70,
+                               'bg-danger': (exam.marks/exam.max_marks)*100 < 50
+                             }"
+                             [style.width]="(exam.marks/exam.max_marks)*100 + '%'">
+                          {{ ((exam.marks/exam.max_marks)*100).toFixed(1) }}%
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="'bg-' + getGradeColor(getGrade((exam.marks/exam.max_marks)*100))">
+                        {{ getGrade((exam.marks/exam.max_marks)*100) }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <div *ngIf="selectedStudentExams.length === 0" class="alert alert-info">
+              No exam records found for this student.
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="alert alert-info mt-4">
+          <h6>📚 Grading System:</h6>
+          <div class="row">
+            <div class="col-md-4">
+              <span class="badge bg-success me-2">A, A-</span> Excellent (75-100%)
+            </div>
+            <div class="col-md-4">
+              <span class="badge bg-warning me-2">C+, C, C-</span> Average (45-69%)
+            </div>
+            <div class="col-md-4">
+              <span class="badge bg-danger me-2">D, E</span> Needs Improvement (Below 45%)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
